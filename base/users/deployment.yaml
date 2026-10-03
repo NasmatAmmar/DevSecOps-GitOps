@@ -23,7 +23,7 @@ spec:
       containers:
         - name: users-service
 
-          image: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/users-service:build-42-b1651ad
+          image: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/users-service:build-50-030116e
 
           imagePullPolicy: Always
 
