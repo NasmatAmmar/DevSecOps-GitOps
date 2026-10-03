@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-service
+  namespace: devsecops
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: users-service
+
+  template:
+    metadata:
+      labels:
+        app: users-service
+
+    spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
+
+      containers:
+        - name: users-service
+
+          image: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/users-service:build-42-b1651ad
+
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8000
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: users-db-secret
+                  key: DATABASE_URL
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
