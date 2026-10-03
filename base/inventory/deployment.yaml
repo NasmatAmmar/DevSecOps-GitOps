@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: devsecops
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: inventory-service
+
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+
+    spec:
+      imagePullSecrets:
+        - name: ecr-registry-secret
+
+      containers:
+        - name: inventory-service
+
+          image: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/inventory-service:build-42-b1651ad
+
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8000
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: inventory-db-secret
+                  key: DATABASE_URL
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
