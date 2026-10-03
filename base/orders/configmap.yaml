@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-config
+  namespace: devsecops
+
+data:
+  USERS_URL: "http://users-service:8000"
+  INVENTORY_URL: "http://inventory-service:8000"
+  HTTP_TIMEOUT_SECONDS: "3"
