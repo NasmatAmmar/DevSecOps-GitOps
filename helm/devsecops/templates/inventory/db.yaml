@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-db
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  clusterIP: None
+
+  selector:
+    app: inventory-db
+
+  ports:
+    - port: {{ .Values.inventory.database.port }}
+      targetPort: {{ .Values.inventory.database.port }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: inventory-db
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  serviceName: inventory-db
+  replicas: {{ .Values.inventory.database.replicas }}
+
+  selector:
+    matchLabels:
+      app: inventory-db
+
+  template:
+    metadata:
+      labels:
+        app: inventory-db
+
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.inventory.database.image.repository }}:{{ .Values.inventory.database.image.tag }}"
+
+          ports:
+            - containerPort: {{ .Values.inventory.database.port }}
+
+          envFrom:
+            - secretRef:
+                name: {{ .Values.inventory.database.secretName }}
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - {{ .Values.inventory.database.readiness.command | quote }}
+
+            initialDelaySeconds: {{ .Values.inventory.database.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.inventory.database.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.inventory.database.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.inventory.database.readiness.failureThreshold }}
+
+          volumeMounts:
+            - name: inventory-db-storage
+              mountPath: {{ .Values.inventory.database.storage.mountPath }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: inventory-db-storage
+
+      spec:
+        accessModes:
+          - {{ .Values.inventory.database.storage.accessMode }}
+
+        resources:
+          requests:
+            storage: {{ .Values.inventory.database.storage.size }}

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  replicas: {{ .Values.inventory.replicas }}
+
+  selector:
+    matchLabels:
+      app: inventory-service
+
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+
+    spec:
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+
+      containers:
+        - name: inventory-service
+
+          image: "{{ .Values.inventory.image.repository }}:{{ .Values.inventory.image.tag }}"
+          imagePullPolicy: {{ .Values.inventory.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.inventory.service.targetPort }}
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.inventory.database.secretName }}
+                  key: {{ .Values.inventory.database.secretKey }}
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.inventory.probes.readiness.path }}
+              port: {{ .Values.inventory.service.targetPort }}
+            initialDelaySeconds: {{ .Values.inventory.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.inventory.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.inventory.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.inventory.probes.readiness.failureThreshold }}
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.inventory.probes.liveness.path }}
+              port: {{ .Values.inventory.service.targetPort }}
+            initialDelaySeconds: {{ .Values.inventory.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.inventory.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.inventory.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.inventory.probes.liveness.failureThreshold }}

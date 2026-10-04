@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-service
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  replicas: {{ .Values.orders.replicas }}
+
+  selector:
+    matchLabels:
+      app: orders-service
+
+  template:
+    metadata:
+      labels:
+        app: orders-service
+
+    spec:
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+
+      containers:
+        - name: orders-service
+          image: "{{ .Values.orders.image.repository }}:{{ .Values.orders.image.tag }}"
+          imagePullPolicy: {{ .Values.orders.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.orders.service.targetPort }}
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.orders.database.secretName }}
+                  key: {{ .Values.orders.database.secretKey }}
+
+            - name: USERS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: orders-config
+                  key: USERS_URL
+
+            - name: INVENTORY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: orders-config
+                  key: INVENTORY_URL
+
+            - name: HTTP_TIMEOUT_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: orders-config
+                  key: HTTP_TIMEOUT_SECONDS
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.orders.probes.readiness.path }}
+              port: {{ .Values.orders.service.targetPort }}
+            initialDelaySeconds: {{ .Values.orders.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.orders.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.orders.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.orders.probes.readiness.failureThreshold }}
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.orders.probes.liveness.path }}
+              port: {{ .Values.orders.service.targetPort }}
+            initialDelaySeconds: {{ .Values.orders.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.orders.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.orders.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.orders.probes.liveness.failureThreshold }}

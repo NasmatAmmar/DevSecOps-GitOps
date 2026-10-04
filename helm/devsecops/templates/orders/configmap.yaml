@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-config
+  namespace: {{ .Values.global.namespace }}
+
+data:
+  USERS_URL: {{ .Values.orders.config.usersUrl | quote }}
+  INVENTORY_URL: {{ .Values.orders.config.inventoryUrl | quote }}
+  HTTP_TIMEOUT_SECONDS: {{ .Values.orders.config.httpTimeoutSeconds | quote }}

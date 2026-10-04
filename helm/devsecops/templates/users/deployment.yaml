@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-service
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  replicas: {{ .Values.users.replicas }}
+
+  selector:
+    matchLabels:
+      app: users-service
+
+  template:
+    metadata:
+      labels:
+        app: users-service
+
+    spec:
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+
+      containers:
+        - name: users-service
+
+          image: "{{ .Values.users.image.repository }}:{{ .Values.users.image.tag }}"
+          imagePullPolicy: {{ .Values.users.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.users.service.targetPort }}
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.users.database.secretName }}
+                  key: {{ .Values.users.database.secretKey }}
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.users.probes.readiness.path }}
+              port: {{ .Values.users.service.targetPort }}
+            initialDelaySeconds: {{ .Values.users.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.users.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.users.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.users.probes.readiness.failureThreshold }}
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.users.probes.liveness.path }}
+              port: {{ .Values.users.service.targetPort }}
+            initialDelaySeconds: {{ .Values.users.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.users.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.users.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.users.probes.liveness.failureThreshold }}

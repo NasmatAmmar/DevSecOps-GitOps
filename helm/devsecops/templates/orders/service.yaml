@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-service
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  selector:
+    app: orders-service
+
+  ports:
+    - port: {{ .Values.orders.service.port }}
+      targetPort: {{ .Values.orders.service.targetPort }}
+
+  type: {{ .Values.orders.service.type }}

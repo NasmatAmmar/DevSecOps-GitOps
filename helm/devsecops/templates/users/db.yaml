@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-db
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  clusterIP: None
+
+  selector:
+    app: users-db
+
+  ports:
+    - port: {{ .Values.users.database.port }}
+      targetPort: {{ .Values.users.database.port }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: users-db
+  namespace: {{ .Values.global.namespace }}
+
+spec:
+  serviceName: users-db
+  replicas: {{ .Values.users.database.replicas }}
+
+  selector:
+    matchLabels:
+      app: users-db
+
+  template:
+    metadata:
+      labels:
+        app: users-db
+
+    spec:
+      containers:
+        - name: postgres
+
+          image: "{{ .Values.users.database.image.repository }}:{{ .Values.users.database.image.tag }}"
+
+          ports:
+            - containerPort: {{ .Values.users.database.port }}
+
+          envFrom:
+            - secretRef:
+                name: {{ .Values.users.database.secretName }}
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - {{ .Values.users.database.readiness.command | quote }}
+
+            initialDelaySeconds: {{ .Values.users.database.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.users.database.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.users.database.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.users.database.readiness.failureThreshold }}
+
+          volumeMounts:
+            - name: users-db-storage
+              mountPath: {{ .Values.users.database.storage.mountPath }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: users-db-storage
+
+      spec:
+        accessModes:
+          - {{ .Values.users.database.storage.accessMode }}
+
+        resources:
+          requests:
+            storage: {{ .Values.users.database.storage.size }}
