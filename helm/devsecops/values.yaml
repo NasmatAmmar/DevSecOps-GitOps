@@ -9,7 +9,7 @@ users:
 
   image:
     repository: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/users-service
-    tag: "build-52-e6a9efd"
+    tag: "build-55-ef553ac"
     pullPolicy: Always
 
   service:
@@ -60,7 +60,7 @@ inventory:
 
   image:
     repository: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/inventory-service
-    tag: "build-52-e6a9efd"
+    tag: "build-55-ef553ac"
     pullPolicy: Always
 
   service:
@@ -112,7 +112,7 @@ orders:
 
   image:
     repository: 359062857260.dkr.ecr.us-east-1.amazonaws.com/devsecops/orders-service
-    tag: "build-52-e6a9efd"
+    tag: "build-55-ef553ac"
     pullPolicy: Always
 
   service:
@@ -194,7 +194,7 @@ frontend:
 
   image:
     repository: 359062857260.dkr.ecr.us-east-1.amazonaws.com/frontend-service
-    tag: frontend-local
+    tag: "build-55-ef553ac"
     pullPolicy: Always
 
   service:
